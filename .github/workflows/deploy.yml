@@ -1,0 +1,17 @@
+# Our Awesome Deployment Pipeline!
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+    ## checks out our project source code
+    - uses: actions/checkout@v2
+    
+    ## Builds our docker image!
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag notarized-image:$(date +%s)
