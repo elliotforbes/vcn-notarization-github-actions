@@ -35,4 +35,4 @@ jobs:
         name: forbsey/notarized-image
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-        tags: "latest"
+        tags: "${GITHUB_RUN_NUMBER}"
