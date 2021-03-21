@@ -14,4 +14,25 @@ jobs:
     
     ## Builds our docker image!
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag notarized-image:$(date +%s)
+      run: docker build -t forbsey/notarized-image:$GITHUB_RUN_NUMBER .
+
+    - name: "Download vcn"
+      run: |
+        curl -L -o /tmp/vcn https://github.com/vchain-us/vcn/releases/download/v0.7.3/vcn-v0.7.3-linux-amd64-static
+        CHECKSUM=$(sha256sum /tmp/vcn | cut -d " " -f 1)
+        echo $CHECKSUM
+        curl -s https://api.codenotary.io/authenticate/$CHECKSUM?org=vchain.us | grep -q :0
+        chmod +x /tmp/vcn
+
+    - name: "Notarize Docker Image"
+      run: |
+        VCN_USER=${{ secrets.CODENOTARY_USER }}  VCN_PASSWORD=${{ secrets.CODENOTARY_PASS }} /tmp/vcn login
+        VCN_NOTARIZATION_PASSWORD=${{ secrets.CODENOTARY_PASS }} /tmp/vcn n -p --attr GitHub="${GITHUB_SHA:0:7}" docker://${DOCKER_IMAGE}:$GITHUB_RUN_NUMBER 
+
+    - name: Publish to Registry
+      uses: elgohr/Publish-Docker-Github-Action@master
+      with:
+        name: forbsey/
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        tags: "latest"
